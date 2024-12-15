@@ -25,7 +25,7 @@ def stop_container():
 def docker_container():
     start_container()
     yield
-    # stop_container()
+    stop_container()
 
 
 def test_reverse_endpoint():
