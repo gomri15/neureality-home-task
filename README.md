@@ -9,7 +9,6 @@ This project includes:
 2. A **pytest-based testing framework** that:
    - Starts the Docker container.
    - Tests both endpoints for correctness.
-   - Generates test results in JUnit XML format.
 
 ---
 
@@ -20,106 +19,144 @@ Before you begin, ensure the following tools are installed:
 - **Docker**: To containerize and run the Flask application.
 - **Python 3.x**: Required for pytest and additional testing dependencies.
 
-   It is recommended you use a virtual env
-   ```bash
-   pip install venv
-   python -m venv dev
-   ```
-   A new dev directory should be created in the project
-   Using windows
-   ```powershall
-   dev/scripts/activate
-   ```
-   using Linux
+It is recommended to use a virtual environment:
+```bash
+python -m venv dev
+```
+A new `dev` directory should be created in the project directory.
 
-   ```bash
-   source dev/scripts/activate
-   ```
+- To activate on Windows:
+  ```powershell
+  dev\Scripts\activate
+  ```
 
-Install requirements
+- To activate on Linux/Mac:
+  ```bash
+  source dev/bin/activate
+  ```
 
+Install required Python dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-## **1. Building the Docker Container**
+## **Modes of Running the Automation**
 
-To build the Docker container for the application:
+This automation supports **two modes**:
 
-**Note**: The automation project already does this for you if you are ok with that and the default settings it uses feel free to skip this part.
+### **Mode 1: Build and Run the Docker Container Automatically**
+In this mode, the automation handles:
+- Building the Docker image.
+- Starting the Docker container.
+- Running the tests.
 
-1. Open your terminal and navigate to the project directory (where `Dockerfile` is located).
+This is the default behavior and requires no manual Docker setup. The `config.json` file must have the default `docker_image` and `docker_container` configurations.
 
-2. Run the following command to build the Docker image:
-   ```bash
-   docker build -t flask-app-test .
-   ```
-   - `-t flask-app-test`: Tags the image with the name `flask-app-test`.
-
-3. Verify the image was created successfully:
-   ```bash
-   docker images
-   ```
-   - You should see `flask-app-test` listed.
+### **Mode 2: Use a Preexisting Docker Container**
+This mode assumes:
+- You have already built the Docker image.
+- You have started the container manually.
+  
+The `config.json` file must be updated with the existing container's configurations (e.g., `docker_image`, `docker_container`, and `docker_port`).
 
 ---
 
-## **2. Running the Application Container**
+## **Configuration**
 
-Run the application using the following command:
+The project reads its configuration from `config.json`. Modify this file as needed:
+
+```json
+{
+  "docker_image": "flask-app-test",
+  "docker_container": "flask-app-test-container",
+  "docker_port": 5000,
+  "api_base_url": "http://localhost:5000",
+  "container_start_wait_time": 5
+}
+```
+
+**Key Fields:**
+- `docker_image`: Name of the Docker image.
+- `docker_container`: Name of the Docker container.
+- `docker_port`: Port on which the application runs.
+- `api_base_url`: Base URL of the application (e.g., `http://localhost:5000`).
+- `container_start_wait_time`: Time to wait for the container to start (default: 5 seconds).
+
+---
+
+## **1. Running in Build-and-Run Mode (Mode 1)**
+
+Simply run the tests without any prior Docker setup:
+```bash
+pytest
+```
+
+This will:
+1. Build the Docker image.
+2. Start the Docker container.
+3. Wait for the container to be ready.
+4. Run the test suite.
+5. Stop the container after the tests.
+
+---
+
+## **2. Running in Preexisting-Container Mode (Mode 2)**
+
+Follow these steps to use an existing Docker setup:
+
+### **Step 1: Build the Docker Image (if not already built)**
+```bash
+docker build -t flask-app-test .
+```
+
+### **Step 2: Start the Docker Container**
 ```bash
 docker run -d --rm --name flask-app-container -p 5000:5000 flask-app-test
 ```
 
-### Explanation:
-- `-d`: Runs the container in detached mode (background).
-- `--rm`: Removes the container after stopping it.
-- `--name flask-app-container`: Assigns a name to the container.
-- `-p 5000:5000`: Maps port 5000 on the host to port 5000 in the container.
+### **Step 3: Update the Configuration**
+Ensure `config.json` matches the preexisting container settings:
+```json
+{
+  "docker_image": "flask-app-test",
+  "docker_container": "flask-app-container",
+  "docker_port": 5000,
+  "api_base_url": "http://localhost:5000",
+  "container_start_wait_time": 0
+}
+```
 
-### Verifying the Application:
-To check if the application is running, open a browser or use `curl`:
-
-1. **Test `/reverse` Endpoint**:
-   ```bash
-   curl "http://localhost:5000/reverse?in=The quick brown fox"
-   ```
-   **Response**:
-   ```json
-   {"result": "fox brown quick The"}
-   ```
-
-2. **Test `/restore` Endpoint**:
-   ```bash
-   curl "http://localhost:5000/restore"
-   ```
-   **Response**:
-   ```json
-   {"result": "fox brown quick The"}
-   ```
+### **Step 4: Run the Tests**
+Run the tests as usual:
+```bash
+pytest
+```
 
 ---
 
-## **3. Running Tests**
+## **3. Verifying the Application**
 
-The project includes a pytest-based test framework in `test_app.py` to validate the application.
+You can manually test the application using `curl` or a browser:
 
-### **Steps to Run Tests**:
-1. Ensure the Docker container is not already running. If it is, stop it:
-   ```bash
-   docker stop flask-app-container
-   ```
+### Test the `/reverse` Endpoint
+```bash
+curl "http://localhost:5000/reverse?in=The quick brown fox"
+```
+**Response**:
+```json
+{"result": "fox brown quick The"}
+```
 
-2. Run the tests using the following command:
-   ```bash
-   pytest --junitxml=report.xml
-   ```
-
-### **Explanation**:
-- `pytest`: Runs the test suite.
-- `--junitxml=report.xml`: Generates a JUnit-compatible test report in `report.xml`.
+### Test the `/restore` Endpoint
+```bash
+curl "http://localhost:5000/restore"
+```
+**Response**:
+```json
+{"result": "fox brown quick The"}
+```
 
 ---
 
@@ -127,7 +164,7 @@ The project includes a pytest-based test framework in `test_app.py` to validate 
 
 ### **Successful Test Run**:
 - All tests pass without errors.
-- Sample output in the terminal:
+- Sample pytest output:
    ```plaintext
    ============================= test session starts =============================
    platform linux -- Python 3.x, pytest-x.x.x, ...
@@ -138,61 +175,14 @@ The project includes a pytest-based test framework in `test_app.py` to validate 
    ============================== 2 passed in 1.23s ==============================
    ```
 
-- A **JUnit XML report** is generated as `report.xml`:
-   ```xml
-   <testsuite name="pytest" tests="2" failures="0">
-       <testcase classname="test_app" name="test_reverse_endpoint" time="0.5"/>
-       <testcase classname="test_app" name="test_restore_endpoint" time="0.7"/>
-   </testsuite>
-   ```
-
-### **Failed Tests**:
-If any test fails, pytest displays the failure reason. For example:
-```plaintext
-=================================== FAILURES ===================================
-______________________________ test_reverse_endpoint ____________________________
-
-AssertionError: assert 'fox brown' == 'brown fox'
-```
-- Fix the issues in the code or the test suite and rerun pytest.
-
 ---
 
 ## **5. Stopping the Container**
 
-To stop the running container:
+To manually stop the running container:
 ```bash
 docker stop flask-app-container
 ```
-
----
-
-## **6. Summary**
-
-### **Steps to Build, Run, and Test**:
-1. **Build** the Docker image:
-   ```bash
-   docker build -t flask-app-test .
-   ```
-
-2. **Run** the container:
-   ```bash
-   docker run -d --rm --name flask-app-container -p 5000:5000 flask-app-test
-   ```
-
-3. **Run Tests**:
-   ```bash
-   pytest --junitxml=report.xml
-   ```
-
-4. **Stop** the container:
-   ```bash
-   docker stop flask-app-container
-   ```
-
-### **Successful Test Outcome**:
-- All tests pass.
-- The `report.xml` file contains the results.
 
 ---
 
