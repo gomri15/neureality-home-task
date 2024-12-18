@@ -1,0 +1,8 @@
+{
+    "docker_image": "flask-app-test",
+    "docker_container": "flask-app-test-container",
+    "docker_port": 5000,
+    "api_base_url": "http://localhost:5000",
+    "container_start_wait_time": 10,
+    "build_docker": true
+}
