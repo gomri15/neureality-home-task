@@ -162,4 +162,5 @@ cython_debug/
 #.idea/
 
 # Project specific ignore
-junit-report.xml
+report.*
+dev/
