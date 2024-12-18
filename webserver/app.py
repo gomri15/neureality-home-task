@@ -20,5 +20,10 @@ def restore_last_result():
     return jsonify({"result": last_result if last_result else "No result yet"})
 
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"}), 200
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
